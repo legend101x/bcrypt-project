@@ -1,14 +1,13 @@
 {
-  "name": "project-bcrypt",
+  "name": "bcrypt-assignment",
   "version": "1.0.0",
+  "description": "Simple signup/login project using bcrypt",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
-    "body-parser": "^1.20.2",
-    "express": "^4.18.2",
-    "fs": "0.0.1-security"
-}
-}
+    "express": "^4.18.2"
+    }
+  }
