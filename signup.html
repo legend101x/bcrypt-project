@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signup</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="form-container">
+    <h2>Signup</h2>
+    <form action="/signup" method="POST">
+      <input type="text" name="username" placeholder="Enter username" required>
+      <input type="password" name="password" placeholder="Enter password" required>
+      <button type="submit">Signup</button>
+    </form>
+    <!-- put this OUTSIDE the form -->
+    <p class="switch-link">Already have an account? 
+      <a href="login.html">Login</a>
+    </p>
+  </div>
+</body>
+</html>
