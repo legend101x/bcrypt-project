@@ -1,71 +1,85 @@
+// Import dependencies
 const express = require("express");
-const bodyParser = require("body-parser");
-const bcrypt = require("bcrypt");
-const fs = require("fs");
 const path = require("path");
+const fs = require("fs");
+const bcrypt = require("bcrypt");
 
 const app = express();
-const PORT = 7000;
 
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname)); // so HTML + CSS can be served
+// Middleware to handle form data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const USERS_FILE = "users.json";
+// Serve static files (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname)));
 
-// Make sure users.json exists
-if (!fs.existsSync(USERS_FILE)) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify([]));
-}
+// ---------------- ROUTES ----------------
 
-// Route: Signup Page
+// Home (Signup Page)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "signup.html"));
 });
 
-// Route: Login Page
+// Login Page
 app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "login.html"));
 });
 
-// Signup POST
+// ---------------- USER LOGIC ----------------
+
+// File to store users
+const USERS_FILE = path.join(__dirname, "users.json");
+
+// Handle Signup
 app.post("/signup", async (req, res) => {
   const { username, password } = req.body;
 
-  let users = JSON.parse(fs.readFileSync(USERS_FILE));
-  const userExists = users.find(u => u.username === username);
-
-  if (userExists) {
-    return res.send("⚠ Username already exists. Try another.");
+  if (!username || !password) {
+    return res.send("Please provide both username and password.");
   }
 
+  let users = [];
+  if (fs.existsSync(USERS_FILE)) {
+    users = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
+  }
+
+  // Check if username exists
+  if (users.find(u => u.username === username)) {
+    return res.send("Username already exists. Please login.");
+  }
+
+  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
   users.push({ username, password: hashedPassword });
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users));
 
-  res.send("✅ Signup successful! <a href='/login'>Go to login</a>");
+  // Save user
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+
+  res.send("Signup successful! You can now login.");
 });
 
-// Login POST
+// Handle Login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
-  let users = JSON.parse(fs.readFileSync(USERS_FILE));
+  let users = [];
+  if (fs.existsSync(USERS_FILE)) {
+    users = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
+  }
+
   const user = users.find(u => u.username === username);
+  if (!user) return res.send("User not found!");
 
-  if (!user) {
-    return res.send("❌ User not found. Please <a href='/'>signup</a>");
-  }
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return res.send("Invalid password!");
 
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) {
-    return res.send("❌ Wrong password.");
-  }
-
-  res.send("🎉 Login successful! Welcome, " + username);
+  res.send(`Welcome back, ${username}!`);
 });
 
-// Start server
+// ---------------- SERVER START ----------------
+
+// ✅ Works locally on 7000, but Render replaces it with process.env.PORT
+const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
